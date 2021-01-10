@@ -36,16 +36,13 @@
        (map calc-wrap-paper)
        (apply +)))
 
-(defn remove-side [sides x]
-  (let [[a b] (split-with #(not= % x) sides)] (concat a (rest b))))
-
 (defn calc-ribbon [sides]
-  (loop [ribbon 0 sides-remaining sides]
+  (loop [ribbon 0 sides-remaining (sort sides)]
     (if (= 1 (count sides-remaining))
            ribbon
-           (let [x (apply min sides-remaining)]
-             (recur (+ ribbon (* 2 x))
-                    (remove-side sides-remaining x))))))
+           (let [head (first sides-remaining) tail (rest sides-remaining)]
+             (recur (+ ribbon (* 2 head))
+                    tail)))))
 
 (defn calc-bow [sides]
   (apply * sides))

@@ -59,6 +59,10 @@
   (testing "calc-ribbon-and-bow-test"
     (is (= step8-2 (calc-ribbon-and-bow-all step-3)))))
 
-(deftest remove-side-test
-  (testing "calc-remove-side-test"
-    (is (= (1 2 4 5) (remove-side [1 2 3 4 5] 2)))))
+(deftest solve-test
+  (testing "solve-test"
+    (is (= 1598415 (solve)))))
+
+(deftest solve2-test
+  (testing "solve2-test"
+    (is (= 3812909 (solve2)))))
