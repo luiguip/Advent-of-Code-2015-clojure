@@ -37,10 +37,7 @@
        (apply +)))
 
 (defn remove-side [sides x]
-  (loop [l sides i 0]
-    (if (= x (nth l i))
-      (concat (take i l) (drop (inc i) l))
-      (recur l (inc i)))))
+  (let [[a b] (split-with #(not= % x) sides)] (concat a (rest b))))
 
 (defn calc-ribbon [sides]
   (loop [ribbon 0 sides-remaining sides]
