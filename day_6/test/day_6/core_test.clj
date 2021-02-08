@@ -32,6 +32,10 @@
                                     {:do :on :coordinates {:xs [3 4] :ys [0 6]}}
                                     {:do :on :coordinates {:xs [5 6] :ys [0 6]}}])
 
+(def expected-matrix-togglev2 [[0 2 0] [0 0 0] [0 0 0]])
+(def expected-matrix-turnonv2 [[0 1 0] [0 0 0] [0 0 0]])
+(def expected-matrix-turnoffv2 [[0 0 0] [0 0 0] [0 0 0]])
+
 (deftest init-matrix-cases
   (testing "init-matrix tests"
     (is (= expected-matrix (init-matrix 3 3 0)))))
@@ -61,6 +65,13 @@
 (deftest toggle-cases
   (testing "toggle tests"
     (is (= (update-in expected-matrix [0 0] #(bit-xor % 1)) (toggle expected-matrix [0 0])))))
+
+(deftest turnv2-cases
+  (testing "turnv2 tests"
+    (is (= expected-matrix-togglev2 (togglev2 expected-matrix [1 0])))
+    (is (= expected-matrix-turnonv2 (turn-onv2 expected-matrix [1 0])))
+    (is (= expected-matrix-turnoffv2 (turn-offv2 expected-matrix [1 0])))
+    (is (= expected-matrix-turnonv2 (turn-offv2 expected-matrix-togglev2 [1 0])))))
 
 (deftest generate-x-comb-cases
   (testing "x-comb tests"

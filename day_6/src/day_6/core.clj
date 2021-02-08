@@ -36,11 +36,27 @@
 (defn turn-off [matrix [x y]]
   (turn matrix x y 0))
 
+(defn turn-offv2 [matrix [x y]]
+  (update-in matrix [y x] #(if (= 0 %) 0 (dec %))))
+
+(defn turn-onv2 [matrix [x y]]
+  (update-in matrix [y x] #(inc %)))
+
+(defn togglev2 [matrix [x y]]
+  (update-in matrix [y x] #(+ % 2)))
+
 (defn function-from-state [state]
   (case state
     :on turn-on
     :off turn-off
     :toggle toggle
+    :else nil))
+
+(defn function-from-statev2 [state]
+  (case state
+    :on turn-onv2
+    :off turn-offv2
+    :toggle togglev2
     :else nil))
 
 (defn generate-x-comb [xs ys]
@@ -73,8 +89,17 @@
     (-> (function-from-state state)
         (apply-function-matrix matrix coordinate-map))))
 
+(defn update-matrixv2 [matrix do-coordinate-map]
+  (let [state (get do-coordinate-map :do)
+        coordinate-map (get do-coordinate-map :coordinates)]
+    (-> (function-from-statev2 state)
+        (apply-function-matrix matrix coordinate-map))))
+
 (defn update-all-matrix [matrix do-coordinate-map-vec]
   (reduce update-matrix matrix do-coordinate-map-vec))
+
+(defn update-all-matrixv2 [matrix do-coordinate-map-vec]
+  (reduce update-matrixv2 matrix do-coordinate-map-vec))
 
 (defn get-and-split []
   (-> (aoc/get-challenge 6)
@@ -93,13 +118,25 @@
        text-vec-to-data
        (update-all-matrix matrix)))
 
+(defn text-vec-to-final-matrixv2 [matrix text-vec]
+  (->> text-vec
+       text-vec-to-data
+       (update-all-matrixv2 matrix)))
+
 (defn solve []
   (let [matrix (init-matrix 1000 1000 0)]
     (->> (get-and-split)
          (text-vec-to-final-matrix matrix)
          (count-lights-lit))))
 
+(defn solvev2 []
+  (let [matrix (init-matrix 1000 1000 0)]
+    (->> (get-and-split)
+         (text-vec-to-final-matrixv2 matrix)
+         (count-lights-lit))))
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (println (solve)))
+  (println (solve))
+  (println (solvev2)))
