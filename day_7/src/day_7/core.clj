@@ -20,8 +20,7 @@
 
 (defn set-not-map [s]
   (let [s-list (str/split s #" ")
-        x (get s-list 1)
-        r (last s-list)]
+        [_ x _ r] s-list]
     {:op bit-not :x x :r r}))
 
 (defn case-logic-gate [s]
@@ -34,23 +33,25 @@
 
 (defn set-operation-map [s]
   (let [s-list (str/split s #" ")
-        x (first s-list)
-        y (get s-list 2)
-        r (last s-list)
-        raw-op (get s-list 1)
+        [x raw-op y _ r] s-list
         op (case-logic-gate raw-op)]
     {:op op :x x :y y :r r}))
 
 (defn op-map-from-string [s]
   (cond
     (re-matches-initial-variable s) [:vars (set-initial-variable s)]
-    (re-matches-not s) [:nots (set-not-map s)]
-    (re-matches-operation s) [:ops (set-operation-map s)]
+    (re-matches-not s) [:nots [(set-not-map s)]]
+    (re-matches-operation s) [:ops [(set-operation-map s)]]
     :else nil))
 
+(defn collection-from-key [k]
+  (if (= k :vars)
+    {}
+    []))
+
 (defn add-op-map-to-nested-maps [m [k v]]
-  (let [old-v (if (empty? m) {} (get m k))
-        value-to-add (conj old-v v)]
+  (let [old-v (if (contains? m k) (get m k) (collection-from-key k))
+        value-to-add (into old-v v)]
     (-> m (dissoc k) (assoc k value-to-add))))
 
 (defn raw-operation-to-general-map [m s]

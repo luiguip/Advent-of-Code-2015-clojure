@@ -58,26 +58,33 @@
 (deftest op-map-from-string-cases
   (testing "op-map-from-string tests"
     (is (= [:vars {"a" 1}] (op-map-from-string "1 -> a")))
-    (is (= [:ops {:op bit-and :x "b" :y "c" :r "a"}] (op-map-from-string "b AND c -> a")))
-    (is (= [:nots {:op bit-not :x "a" :r "b"}] (op-map-from-string "NOT a -> b")))))
+    (is (= [:ops [{:op bit-and :x "b" :y "c" :r "a"}]] (op-map-from-string "b AND c -> a")))
+    (is (= [:nots [{:op bit-not :x "a" :r "b"}]] (op-map-from-string "NOT a -> b")))))
+
+(deftest collection-from-key-test
+  (is (= {} (collection-from-key :vars)))
+  (is (= [] (collection-from-key :ops)))
+  (is (= [] (collection-from-key :nots))))
 
 (deftest add-op-map-to-nested-maps-cases
   (testing "add-op-map-to-nested-maps tests"
     (is (= {:vars {"a" 1}} (add-op-map-to-nested-maps {} [:vars {"a" 1}])))
     (is (= {:vars {"a" 1 "b" 2}} (add-op-map-to-nested-maps {:vars {"b" 2}} [:vars {"a" 1}])))
+    (is (= {:ops [{:op bit-or :x "a" :y "b" :r "c"}]} (add-op-map-to-nested-maps {} [:ops [{:op bit-or :x "a" :y "b" :r "c"}]])))
+    (is (= {:nots [{:op bit-not :x "a"  :r "c"}]} (add-op-map-to-nested-maps {} [:nots [{:op bit-not :x "a" :r "c"}]])))
     (is (= ops (add-op-map-to-nested-maps {:ops [{:op bit-and :x "a" :y "b" :r "c"}]}
-                                          [:ops {:op bit-or :x "h" :y "gg" :r "aa"}])))
+                                          [:ops [{:op bit-or :x "h" :y "gg" :r "aa"}]])))
     (is (= nots (add-op-map-to-nested-maps {:nots [{:op bit-not :x "a" :r "z"}]}
-                                           [:nots {:op bit-not :x "h" :r "gg"}])))))
+                                           [:nots [{:op bit-not :x "h" :r "gg"}]])))))
 
 (deftest raw-operation-to-map-cases
   (testing "raw-operation-to-map tests"
-    (is (= {:ops {:op bit-and :x "a" :y "b" :r "c"}} (raw-operation-to-general-map {} "a AND b -> c")))
-    (is (= {:ops {:op bit-or :x "a" :y "b" :r "c"}} (raw-operation-to-general-map {} "a OR b -> c")))
-    (is (= {:ops {:op bit-shift-left :x "a" :y "b" :r "c"}} (raw-operation-to-general-map {} "a LSHIFT b -> c")))
-    (is (= {:ops {:op bit-shift-left :x "a" :y "b" :r "c"}} (raw-operation-to-general-map {} "a LSHIFT b -> c")))
-    (is (= {:nots {:op bit-not :x "a" :r "b"}} (raw-operation-to-general-map {} "NOT a -> b")))
-    (is (= {nil {}} (raw-operation-to-general-map {} "Invalid!")))
+    (is (= {:ops [{:op bit-and :x "a" :y "b" :r "c"}]} (raw-operation-to-general-map {} "a AND b -> c")))
+    (is (= {:ops [{:op bit-or :x "a" :y "b" :r "c"}]} (raw-operation-to-general-map {} "a OR b -> c")))
+    (is (= {:ops [{:op bit-shift-left :x "a" :y "b" :r "c"}]} (raw-operation-to-general-map {} "a LSHIFT b -> c")))
+    (is (= {:ops [{:op bit-shift-left :x "a" :y "b" :r "c"}]} (raw-operation-to-general-map {} "a LSHIFT b -> c")))
+    (is (= {:nots [{:op bit-not :x "a" :r "b"}]} (raw-operation-to-general-map {} "NOT a -> b")))
+    (is (= {nil []} (raw-operation-to-general-map {} "Invalid!")))
     (is (= {:vars {"a"  0}} (raw-operation-to-general-map {} "0 -> a")))))
 
 (deftest raw-strings-to-general-map-cases
