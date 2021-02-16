@@ -10,12 +10,15 @@
   (re-matches #"NOT \w+ -> \w+" s))
 
 (defn re-matches-operation [s]
-  (re-matches #"\w+ [A-Z]+ \w+ -> \w+" s))
+  (first (re-matches #"\w+ (AND|OR) \w+ -> \w+" s)))
+
+(defn re-matches-shift [s]
+  (first (re-matches #"\w+ (LSHIFT|RSHIFT) \w+ -> \w+" s)))
 
 (defn set-initial-variable [s]
   (let [s-list (str/split s #" ")
-        v (Integer/parseInt (first s-list))
-        r (last s-list)]
+        [sv _ r] s-list
+        v (Integer/parseInt sv)]
     {r v}))
 
 (defn set-not-map [s]
@@ -37,11 +40,19 @@
         op (case-logic-gate raw-op)]
     {:op op :x x :y y :r r}))
 
+(defn set-shift-map [s]
+  (let [s-list (str/split s #" ")
+        [x raw-op sn _ r] s-list
+        n (Integer/parseInt sn)
+        op (case-logic-gate raw-op)]
+    {:op op :x x :n n :r r}))
+
 (defn op-map-from-string [s]
   (cond
     (re-matches-initial-variable s) [:vars (set-initial-variable s)]
     (re-matches-not s) [:nots [(set-not-map s)]]
     (re-matches-operation s) [:ops [(set-operation-map s)]]
+    (re-matches-shift s) [:shifts [(set-shift-map s)]]
     :else nil))
 
 (defn collection-from-key [k]
@@ -66,6 +77,11 @@
 (defn solve-op [vars {op :op x :x y :y r :r}]
   (if (every? #(contains? vars %) [x y])
     (assoc vars r (op (get vars x) (get vars y)))
+    vars))
+
+(defn solve-shift [vars {op :op x :x n :n r :r}]
+  (if (contains? vars x)
+    (assoc vars r (op (get vars x) n))
     vars))
 
 (defn solve-not [vars {op :op x :x r :r}]
