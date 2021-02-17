@@ -95,27 +95,33 @@
 (defn contains-evaluated-not? [vars {x :x r :r}]
   (every? #(contains? vars %) [x r]))
 
-(defn filter-evaluated [{vars :vars ops :ops nots :nots}]
+(defn contains-evaluated-shift? [vars {x :x _ :n r :r}]
+  (every? #(contains? vars %) [x r]))
+
+(defn filter-evaluated [{vars :vars ops :ops nots :nots shifts :shifts}]
   {:vars vars
    :ops (filter #(not (contains-evaluated-op? vars %)) ops)
-   :nots (filter #(not (contains-evaluated-not? vars %)) nots)})
+   :nots (filter #(not (contains-evaluated-not? vars %)) nots)
+   :shifts (filter #(not (contains-evaluated-shift? vars %)) shifts)})
 
-(defn solve-all [{vars :vars ops :ops nots :nots}]
-  (flatten [(map #(solve-op vars %) ops) (map #(solve-not vars %) nots)]))
+(defn solve-all [{vars :vars ops :ops nots :nots shifts :shifts}]
+  (flatten [(map #(solve-op vars %) ops)
+            (map #(solve-not vars %) nots)
+            (map #(solve-shift vars %) shifts)]))
 
 (defn solve-iteration [m]
-  (let [{vars :vars ops :ops nots :nots} m]
+  (let [{_ :vars ops :ops nots :nots shifts :shifts} m]
     (->> m
          (solve-all)
          (apply merge)
-         (#(filter-evaluated {:vars % :ops ops :nots nots})))))
+         (#(filter-evaluated {:vars % :ops ops :nots nots :shifts shifts})))))
 
 (defn solve-iterations [m]
   (loop [om m]
     (let [nm (solve-iteration om)
-          {vars :vars ops :ops nots :nots} nm]
+          {vars :vars ops :ops nots :nots shifts :shifts} nm]
       (if
-       (or (every? #(empty? %) [ops nots]) (= om nm))
+       (or (every? #(empty? %) [ops nots shifts]) (= om nm))
         vars
         (recur nm)))))
 

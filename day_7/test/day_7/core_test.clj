@@ -11,17 +11,24 @@
 (def raw-strings ["1 -> a", "h OR gg -> aa", "a LSHIFT 1 -> zz"
                   "NOT h -> gg", "NOT a -> z", "aa RSHIFT 10 -> yy"
                   "a AND b -> c", "2 -> b"])
-(def vars2-pre-merge '({"a" 1, "b" 2, "c" 0} {"a" 1, "b" 2} {"a" 1, "b" 2, "z" -2} {"a" 1, "b" 2}))
+(def vars2-pre-merge '({"a" 1, "b" 2, "c" 0} {"a" 1, "b" 2}
+                                             {"a" 1, "b" 2, "z" -2} {"a" 1, "b" 2}
+                                             {"a" 1, "b" 2, "zz" 2} {"a" 1, "b" 2}))
 (def vars2 {:vars {"a" 1 "b" 2 "c" 0 "z" -2}})
+(def vars2-1 {:vars {"a" 1 "b" 2 "c" 0 "z" -2 "zz" 2}})
 (def ops2-2 {:ops [{:op bit-or :x "h" :y "gg" :r "aa"}]})
+(def shifts2 {:shifts [{:op bit-shift-left :x "a" :n 1 :r "zz"}
+                       {:op bit-shift-right :x "aa" :n 10 :r "yy"}]})
+(def shifts2-2 {:shifts [{:op bit-shift-right :x "aa" :n 10 :r "yy"}]})
 (def nots2-2 {:nots [{:op bit-not :x "h" :r "gg"}]})
-(def general-map2 (merge vars2 ops nots))
-(def general-map2-2 (merge vars2 ops2-2 nots2-2))
+(def general-map2 (merge vars2 ops nots shifts))
+(def general-map2-2 (merge vars2 ops2-2 nots2-2 shifts2))
+(def general-map2-3 (merge vars2-1 ops2-2 nots2-2 shifts2-2))
 (def vars3 {:vars {"a" 1 "b" 2 "h" 10}})
-(def vars3-1 {:vars {"a" 1 "b" 2 "h" 10 "gg" -11 "c" 0 "z" -2}})
-(def general-map3 (merge vars3 ops nots))
-(def general-map3-1 (merge vars3-1 {:ops [(get-in ops [:ops 1])]} {:nots []}))
-(def vars3-2 {:vars {"a" 1 "b" 2 "h" 10 "gg" -11 "c" 0 "z" -2 "aa" -1}})
+(def vars3-1 {:vars {"a" 1 "b" 2 "h" 10 "gg" -11 "c" 0 "z" -2 "zz" 2}})
+(def general-map3 (merge vars3 ops nots shifts2))
+(def general-map3-1 (merge vars3-1 {:ops [(get-in ops [:ops 1])]} {:nots []} shifts2-2))
+(def vars3-2 {:vars {"a" 1 "b" 2 "h" 10 "gg" -11 "c" 0 "z" -2 "aa" -1 "zz" 2 "yy" -1}})
 
 (deftest re-matches-initial-variable-cases
   (testing "re-matches-initial-variable tests"
@@ -55,12 +62,12 @@
     (is (= bit-shift-right (case-logic-gate "RSHIFT")))))
 
 (deftest set-operation-map-cases
-    (is (= {:op bit-and :x "a" :y "b" :r "c"} (set-operation-map "a AND b -> c")))
-    (is (= {:op bit-or :x "a" :y "b" :r "c"} (set-operation-map "a OR b -> c"))))
+  (is (= {:op bit-and :x "a" :y "b" :r "c"} (set-operation-map "a AND b -> c")))
+  (is (= {:op bit-or :x "a" :y "b" :r "c"} (set-operation-map "a OR b -> c"))))
 
 (deftest set-shift-map-test
-    (is (= {:op bit-shift-left :x "a" :n 1 :r "c"} (set-shift-map "a LSHIFT 1 -> c")))
-    (is (= {:op bit-shift-right :x "a" :n 11 :r "c"} (set-shift-map "a RSHIFT 11 -> c"))))
+  (is (= {:op bit-shift-left :x "a" :n 1 :r "c"} (set-shift-map "a LSHIFT 1 -> c")))
+  (is (= {:op bit-shift-right :x "a" :n 11 :r "c"} (set-shift-map "a RSHIFT 11 -> c"))))
 
 (deftest op-map-from-string-cases
   (testing "op-map-from-string tests"
@@ -88,7 +95,7 @@
     (is (= ops (add-op-map-to-nested-maps {:ops [{:op bit-and :x "a" :y "b" :r "c"}]}
                                           [:ops [{:op bit-or :x "h" :y "gg" :r "aa"}]])))
     (is (= shifts (add-op-map-to-nested-maps {:shifts [{:op bit-shift-left :x "a" :n 1 :r "zz"}]}
-                                          [:shifts [{:op bit-shift-right :x "aa" :n 10 :r "yy"}]])))
+                                             [:shifts [{:op bit-shift-right :x "aa" :n 10 :r "yy"}]])))
     (is (= nots (add-op-map-to-nested-maps {:nots [{:op bit-not :x "a" :r "z"}]}
                                            [:nots [{:op bit-not :x "h" :r "gg"}]])))))
 
@@ -120,6 +127,9 @@
     (is (= {"a" 1 "b" 2 "c" 0} (solve-op {"a" 1 "b" 2} {:op bit-shift-right :x "a" :y "b" :r "c"})))
     (is (= {"a" 1 "b" 2 "c" 0} (solve-op {"a" 1 "b" 2} {:op bit-and :x "a" :y "b" :r "c"})))))
 
+(deftest solve-shift-test
+  (is (= {"a" 1 "c" 2} (solve-shift {"a" 1} {:op bit-shift-left :x "a" :n 1 :r "c"}))))
+
 (deftest solve-not-cases
   (testing "solve-not tests"
     (is (= {"a" 1 "b" -2} (solve-not {"a" 1} {:op bit-not :x "a" :r "b"})))))
@@ -132,8 +142,13 @@
 
 (deftest contains-evalueated-not-cases
   (is (contains-evaluated-not? {"a" 1 "b" -2} {:op bit-not :x "a" :r "b"}))
-  (is (not (contains-evaluated-not? {"a" 1} {:op bit-or :x "a" :r "b"})))
-  (is (not (contains-evaluated-not? {"b" -2} {:op bit-or :x "a" :r "b"}))))
+  (is (not (contains-evaluated-not? {"a" 1} {:op bit-not :x "a" :r "b"})))
+  (is (not (contains-evaluated-not? {"b" -2} {:op bit-not :x "a" :r "b"}))))
+
+(deftest contains-evalueated-shift-test
+  (is (contains-evaluated-shift? {"a" 1 "b" 2} {:op bit-shift-left :x "a" :n 1 :r "b"}))
+  (is (not (contains-evaluated-shift? {"a" 1} {:op bit-shift-left :x "a" :n 1 :r "b"})))
+  (is (not (contains-evaluated-shift? {"b" 2} {:op bit-shift-left :x "a" :n 1 :r "b"}))))
 
 (deftest filter-evaluated-cases
   (is (= general-map2-2 (filter-evaluated general-map2))))
@@ -142,7 +157,7 @@
   (is (= vars2-pre-merge (solve-all general-map))))
 
 (deftest solve-iteration-test
-  (is (= general-map2-2 (solve-iteration general-map)))
+  (is (= general-map2-3 (solve-iteration general-map)))
   (is (= general-map3-1 (solve-iteration general-map3))))
 
 (deftest solve-iterations-test
