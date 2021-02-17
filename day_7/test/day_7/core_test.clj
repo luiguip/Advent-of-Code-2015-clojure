@@ -61,8 +61,9 @@
     (is (= bit-shift-left (case-logic-gate "LSHIFT")))
     (is (= bit-shift-right (case-logic-gate "RSHIFT")))))
 
-(deftest set-operation-map-cases
+(deftest set-operation-map-test
   (is (= {:op bit-and :x "a" :y "b" :r "c"} (set-operation-map "a AND b -> c")))
+  (is (= {:op bit-and :n 1 :y "b" :r "c"} (set-operation-map "1 AND b -> c")))
   (is (= {:op bit-or :x "a" :y "b" :r "c"} (set-operation-map "a OR b -> c"))))
 
 (deftest set-shift-map-test
@@ -123,9 +124,8 @@
   (testing "solve-op tests"
     (is (= {"a" 1} (solve-op {"a" 1} {:op bit-and :x "a" :b "b" :r "c"})))
     (is (= {"a" 1 "b" 2 "c" 3} (solve-op {"a" 1 "b" 2} {:op bit-or :x "a" :y "b" :r "c"})))
-    (is (= {"a" 1 "b" 2 "c" 4} (solve-op {"a" 1 "b" 2} {:op bit-shift-left :x "a" :y "b" :r "c"})))
-    (is (= {"a" 1 "b" 2 "c" 0} (solve-op {"a" 1 "b" 2} {:op bit-shift-right :x "a" :y "b" :r "c"})))
-    (is (= {"a" 1 "b" 2 "c" 0} (solve-op {"a" 1 "b" 2} {:op bit-and :x "a" :y "b" :r "c"})))))
+    (is (= {"a" 1 "b" 2 "c" 3} (solve-op {"a" 1 "b" 2} {:op bit-or :y "a" :n 2 :r "c"})))
+    (is (= {"a" 1 "b" 2 "c" 0} (solve-op {"a" 1 "b" 2} {:op bit-and :y "a" :n 2 :r "c"})))))
 
 (deftest solve-shift-test
   (is (= {"a" 1 "c" 2} (solve-shift {"a" 1} {:op bit-shift-left :x "a" :n 1 :r "c"}))))

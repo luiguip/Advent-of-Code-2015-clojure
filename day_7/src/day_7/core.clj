@@ -37,8 +37,11 @@
 (defn set-operation-map [s]
   (let [s-list (str/split s #" ")
         [x raw-op y _ r] s-list
-        op (case-logic-gate raw-op)]
-    {:op op :x x :y y :r r}))
+        op (case-logic-gate raw-op)
+        nx (if (every? #(Character/isDigit %) x) (Integer/parseInt x) nil)]
+    (if (= nx nil)
+      {:op op :x x :y y :r r}
+      {:op op :n nx :y y :r r})))
 
 (defn set-shift-map [s]
   (let [s-list (str/split s #" ")
@@ -74,10 +77,14 @@
   (->> raw-strings
        (reduce raw-operation-to-general-map {})))
 
-(defn solve-op [vars {op :op x :x y :y r :r}]
-  (if (every? #(contains? vars %) [x y])
-    (assoc vars r (op (get vars x) (get vars y)))
-    vars))
+(defn solve-op [vars {op :op x :x y :y n :n r :r}]
+  (if (nil? n)
+    (if (every? #(contains? vars %) [x y])
+      (assoc vars r (op (get vars x) (get vars y)))
+      vars)
+    (if (contains? vars y)
+      (assoc vars r (op n (get vars y)))
+      vars)))
 
 (defn solve-shift [vars {op :op x :x n :n r :r}]
   (if (contains? vars x)
@@ -89,8 +96,10 @@
     (assoc vars r (op (get vars x)))
     vars))
 
-(defn contains-evaluated-op? [vars {x :x y :y r :r}]
-  (every? #(contains? vars %) [x y r]))
+(defn contains-evaluated-op? [vars {x :x y :y n :n r :r}]
+  (if (nil? n)
+    (every? #(contains? vars %) [x y r])
+    (every? #(contains? vars %) [y r])))
 
 (defn contains-evaluated-not? [vars {x :x r :r}]
   (every? #(contains? vars %) [x r]))
@@ -132,7 +141,15 @@
 (defn solve1 []
   (-> (get-and-split)
       (raw-strings-to-general-map)
-      (solve-iterations)))
+      (solve-iterations)
+      (get "lx")))
+
+(defn solve2 []
+  (-> (aoc/get-challenge "7-2")
+      (str/split #"\n")
+      (raw-strings-to-general-map)
+      (solve-iterations)
+      (get "lx")))
 
 (defn -main
   "I don't do a whole lot ... yet."
