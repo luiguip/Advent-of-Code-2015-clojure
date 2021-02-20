@@ -3,7 +3,7 @@
             [aoc-2015.core :as aoc])
   (:gen-class))
 
-(def escaped-re #"[\"\\]")
+(def escaped-re #"\\[\"\\]")
 (def escaped-cn {:ns 2 :ms 1})
 (def hexa-re #"\\x[0-9a-f]{2}")
 (def hexa-cn {:ns 4 :ms 1})
