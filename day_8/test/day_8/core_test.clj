@@ -6,7 +6,7 @@
   (is (= {:s "abab" :cns (repeat 2 escaped-cn)}
          (calculate escaped-re escaped-cn {:s "ab\\\"\\\"ab" :cns []})))
   (is (= {:s "abab" :cns (repeat 2 quotes-cn)}
-         (calculate-quotes {:s "\"abab\"" :cns []})))
+         (calculate-quotes quotes-cn {:s "\"abab\"" :cns []})))
   (is (= {:s "abab" :cns [hexa-cn]}
          (calculate hexa-re hexa-cn {:s "ab\\xabab" :cns []}))))
 

@@ -11,11 +11,15 @@
 (def quotes-re-last #"\"$")
 (def quotes-cn {:ns 1 :ms 0})
 
-(defn calculate-quotes [{s :s cns :cns}]
+(def escaped-decode-cn {:ns 4 :ms 2})
+(def hexa-decode-cn {:ns 5 :ms 4})
+(def quotes-decode-cn {:ns 2 :ms 1})
+
+(defn calculate-quotes [cn {s :s cns :cns}]
   {:s (-> s
            (str/replace-first quotes-re-first "")
            (str/replace-first quotes-re-last ""))
-    :cns (repeat 2 quotes-cn)})
+    :cns (repeat 2 cn)})
 
 (defn calculate [re cn m]
   (loop [{s :s cns :cns} m ]
@@ -35,11 +39,19 @@
 
 (defn calculate-all [m]
   (->> m
-      calculate-quotes
+      (calculate-quotes quotes-cn)
       (calculate escaped-re escaped-cn)
       (calculate hexa-re hexa-cn)
       calculate-remain
       (reduce sum-maps)))
+
+(defn calculate-all-2 [m]
+  (->> m
+       (calculate-quotes quotes-decode-cn)
+       (calculate escaped-re escaped-decode-cn)
+       (calculate hexa-re hexa-decode-cn)
+       calculate-remain
+       (reduce sum-maps)))
 
 (defn txt->str-list []
   (->
@@ -50,6 +62,12 @@
   (->> (txt->str-list)
        (map (fn [s] {:s s :cns []}))
        (map calculate-all)
+       (reduce sum-maps)))
+
+(defn solve2 []
+  (->> (txt->str-list)
+       (map (fn [s] {:s s :cns []}))
+       (map calculate-all-2)
        (reduce sum-maps)))
 
 (defn -main
