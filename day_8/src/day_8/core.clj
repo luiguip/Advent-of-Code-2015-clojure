@@ -5,10 +5,17 @@
 
 (def escaped-re #"\\[\"\\]")
 (def escaped-cn {:ns 2 :ms 1})
-(def hexa-re #"\\x[0-9a-f]{2}")
+(def hexa-re #"\\x[0-9a-fA-F]{2}")
 (def hexa-cn {:ns 4 :ms 1})
-(def quotes-re #"(^\"|\"$)")
+(def quotes-re-first #"^\"")
+(def quotes-re-last #"\"$")
 (def quotes-cn {:ns 1 :ms 0})
+
+(defn calculate-quotes [{s :s cns :cns}]
+  {:s (-> s
+           (str/replace-first quotes-re-first "")
+           (str/replace-first quotes-re-last ""))
+    :cns (repeat 2 quotes-cn)})
 
 (defn calculate [re cn m]
   (loop [{s :s cns :cns} m ]
@@ -28,9 +35,9 @@
 
 (defn calculate-all [m]
   (->> m
-      (calculate quotes-re quotes-cn)
-      (calculate hexa-re hexa-cn)
+      calculate-quotes
       (calculate escaped-re escaped-cn)
+      (calculate hexa-re hexa-cn)
       calculate-remain
       (reduce sum-maps)))
 
